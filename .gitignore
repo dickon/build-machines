@@ -1,0 +1,6 @@
+http.log*
+state.sqlite
+twistd.log*
+xenclient-*
+buildscriptfixes
+
