@@ -1,0 +1,261 @@
+/*************************/
+/*      Standard BB      */
+/*       Overrides       */
+/*************************/
+body.interface {
+    background:none; /* Clear background info then apply our own */
+    background-color:#EEEEEE;
+    background-attachment:fixed;
+    background-size:cover;
+}
+
+div.header, div.footer {
+    background-color:#303030;
+    border-radius: 10px 10px 10px 10px;
+    padding: 5px 5px 5px 5px;
+    color:#FFFFFF;
+    margin-bottom:10px;
+}
+
+div.header a, div.footer a {
+    color:#FFFFFF;
+}
+
+hr {
+    display:none;
+}
+
+h1 {
+    margin-top:0px;
+    margin-bottom:5px;
+}
+
+form span.label {
+    display:inline-block;
+    width:150px;
+}
+
+span.running {
+    animation:progress 3s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    animation-delay: 0s;
+    -webkit-animation:progress 5s; /* Safari and Chrome */
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-direction: alternate;
+}
+
+@keyframes progress
+{
+    from {background:#FF9833;}
+    to {background:#FFDD33;}
+}
+
+@-webkit-keyframes progress /* Safari and Chrome */
+{
+    from {background:#FF9833;}
+    to {background:#FFDD33;}
+}
+
+span.failure {
+    background-color:#F84F4F;
+}
+
+span.exception {
+    color:#000000;
+}
+
+/*************************/
+/*      XTGrid CSS       */
+/*************************/
+span.info {
+    background-color:#F0F0F0;
+    border-radius: 10px 10px 10px 10px;
+    padding: 5px 5px 5px 5px;
+    margin-bottom:10px;
+    display:inline-block;
+}
+
+span.Extras {
+    font-size: 1.25em;
+    font-weight: bold;
+    color: #FFFFFF;
+    border-radius: 10px 10px 10px 10px;
+    background-color: #303030;
+    padding:5px 5px 5px 5px;
+    position:absolute;
+    z-index:100;
+}
+
+span.ExtrasHidden, span.SettingsForm {
+    display:none;
+}
+
+span.ExtrasHidden span.SettingsForm input {
+    text-align:right;
+}
+
+span.Extras:hover span.ExtrasHidden {
+    display:block;
+    padding: 5px 5px 5px 5px;
+}
+
+/*************************/
+/*      Build Grid       */
+/*************************/
+/*************************/
+/*        Row CSS        */
+/*************************/
+
+span.Headings, span.Data, span.Changes, span.ETA, span.DataRow, span.Progress, span.CommitList, span.ShowMore {
+    display:inline-block; /* Ensures each row behaves when given margins, height etc */
+}
+
+/* Headings specifics, colour font size etc */
+span.Headings {
+    font-size: 1.25em;
+    font-weight: bold;
+    color: #FFFFFF;
+    border-radius: 10px 10px 10px 10px;
+    background-color: #303030;
+    margin-bottom:5px;
+    height:30px;
+}
+
+/* Row containing all the data aligned with columns */
+span.Data {
+    margin-bottom:5px;
+}
+
+/* Build Rows, Show More link at bottom & list of filtered down commits */
+span.DataRow, span.ShowMore, span.CommitList {
+    margin-bottom:5px;
+    padding-top:5px;
+    background-color:rgba(240, 240, 240, 0.5);
+    border-radius: 10px 10px 10px 10px;
+    padding-bottom:2px;
+}
+
+span.ShowMore:hover, span.DataRow:hover, span.CommitList:hover {
+    background-color:rgba(250,250,250,0.75);
+}
+
+span.ShowMore {
+    text-align:center;
+}
+
+/*************************/
+/*        Col CSS        */
+/*************************/
+
+/* The default rules for aligned cells in aligned rows */
+span.Headings span.Column, span.Data span.Column {
+    display:inline-block;
+    width:115px;
+    text-align:center;
+    word-wrap:break-word; /* Forces line breaks */
+    max-width:115px;
+    vertical-align:middle;
+}
+
+/* Create some extra space for the tag column */
+span.Headings span.Column:nth-child(2), span.Data span.Column:nth-child(2){
+    width:175px;
+    max-width:175px;
+}
+
+/*** Heading row specifics ***/
+span.Headings span.Column {
+    margin-left: 5px; /* Pad by five pixels to align with borders in data */
+    padding-top:6px;
+}
+
+/* Prevents the first heading column from padding */
+span.Headings span.Column:nth-child(1) {
+    margin-left:0px;
+    width:80px;
+}
+
+span.Headings span.Column:last-of-type {
+    margin-left:0px;
+    width:80px;
+}
+
+/* Colour hyperlinks in headings */
+span.Headings span.Column a {
+    color: #FFFFFF;
+}
+
+/*** Data row specifics ***/
+span.Data span.Column {
+    display:table-cell; /* Fixed width & word-wrap = cells that expand down only */
+    padding-left:5px;
+}
+
+/* For simple "progress bars" that are done, have no eta, exception or failed */
+span.Data span.Column span.RoundBox{
+    display:inline-block; /* Fixed width & word-wrap = cells that expand down only */
+    border-radius: 5px 5px 5px 5px;
+    width:100%;
+    text-decoration:underline;
+    padding-top:2px;
+    padding-bottom:2px;
+}
+
+/* Always capitalize the first letter, it's just good English */
+span.RoundBox:first-letter {
+    text-transform:capitalize;
+}
+
+/* Used to prevent padding on first column */
+span.Data span.Column:nth-child(1) {
+    width:80px;
+    padding-left:0px;
+}
+
+/* Used to reduce size of build time */
+span.Data span.Column:last-of-type {
+    width:80px;
+    padding-left:0px;
+}
+
+/*** Progress bar specifics ***/
+span.ProgressDone {
+    display:inline-block;
+    background-color:#88DD44;
+    border-radius: 5px 0px 0px 5px;
+    position:relative; /* Realigns bar & ETA for browsers that listen */
+    top:25%;
+    padding-top:2px;
+    padding-bottom:2px;
+}
+
+span.ProgressRemain {
+    display:inline-block;
+    background-color:#FF9900;
+    border-radius: 0px 5px 5px 0px;
+    position:relative; /* Realigns bar & ETA for browsers that listen */
+    top:25%;
+    padding-top:2px;
+    padding-bottom:2px;
+}
+
+span.ProgressText {
+    width:100%;
+    display:inline-block;
+    position:relative; /* Realigns bar & ETA for browsers that listen */
+    top:-25%;
+    padding-top:2px;
+    padding-bottom:2px;
+    text-decoration:underline;
+    color:#000000;
+}
+
+/*** Changes row specifics ***/
+span.Changes span.Authors {
+    display:table-cell; /* Fixed width & word-wrap = cells that expand down only */
+    height:100%;
+    text-align:left;
+    padding-left:265px; /* First Row + padding + tag width + padding */
+    padding-right:2px;
+}

@@ -1,0 +1,299 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<!-- Add our CSS for this page only -->
+<head>
+    <link rel="stylesheet" href="XT.css" type="text/css" />
+</head>
+<!-- Top info box -->
+<span class="info">
+  <h1>XTGrid</h1>
+{# Decide if any sub-headings need showing due to filters #}
+{% if length != 0 %}
+{% if branch != ANYBRANCH and category is not none %}
+  <h2>{{branch}}, {{category}}</h2>
+{% elif branch != ANYBRANCH  %}
+  <h2>{{branch}}</h2>
+{% elif category is not none %}
+  <h2>All Branches, {{category}}</h2>
+{% endif %}
+{% else %}
+{% if category is not none %}  <h2>{{category}}</h2>{% endif %}
+{% endif%}
+
+<A HREF="builders/XT_installer">XT_installer</A> builds only happen once Windows, docs, licensing and syncXT builds complete. All times are in UTC.
+</span>
+
+<!-- Drop down hover menu -->
+<span class="Extras">
+    Extras
+  <span class="ExtrasHidden">
+    <!-- Hidden by default unless Javascript is enabled -->
+    <span class="SettingsForm" id="SettingsForm">
+      <h3>Page Settings</h3>
+      <form name="frm1">
+{% if refresh is none %}
+        <input type="text" id="reloadValue" value="0">
+{% else %}
+        <input type="text" id="reloadValue" value="{{refresh}}">
+{% endif %}
+        <button type="button" value="Submit" onclick="setReload()">Set Reload (Seconds, >=15)</button></br>
+{% if length != 0 %} {# Only show branch box if not filtered to one build #}
+{% if branch == ANYBRANCH  %}
+        <input type="text" id="branchValue" >
+{% else %}
+        <input type="text" id="branchValue" value="{{branch}}">
+{% endif %}
+        <button type="button" value="Submit" onclick="setParam('branch')">Set Branch</button></br>
+{% endif %}
+        <input type="text" id="backgroundValue" value="">
+        <button type="button" value="Submit" onclick="setBackground()">Set Background (URL)</button></br>
+      </form>
+    </span>
+    <!-- Form to trigger a new XT_Tag (Hence entire) build -->
+    <form method="post" name="force_build" action="./builders/XT_Tag/force">
+      <h3>Force New Build</h3>
+      <input type="hidden" name="forcescheduler" value="force_XT_Tag">
+      <div class="row force-nested">
+        <div class="row force-text" id="force-force_XT_Tag-username">
+          <span class="label">Your name:</span><input type="text" size="30" name="username" value="">
+        </div>
+        <div class="row force-text" id="force-force_XT_Tag-reason">
+          <span class="label">Reason</span><input type="text" size="30" name="reason" value="force build">
+        </div>
+        <div class="row force-text" id="force-force_XT_Tag-branch">
+          <span class="label">Branch:</span><input type="text" size="30" name="branch" value="">
+        </div>
+      </div>
+      <input type="submit" value="Force Build">
+    </form>
+  </span>
+</span>
+</br>
+
+<!-- Table headings -->
+<span class="Headings" style="min-width:{{ 80 + 180 + ((builders|length)*120) + 85 }}px;" >
+    <span class="Column">Tag Time</span><!-- Hack to prevent whitespace being treated as element
+  --><span class="Column">Tag</span><!-- Hack
+{% for b in builders %}{# Create as many headings as there are builders #}
+  --><span class="Column">
+      <a href="{{ b.url }}">{{ b.name }}</a>
+    </span><!-- Hack
+{% endfor %}
+  --><span class="Column">Build Time</span>
+</span>
+</br>
+
+{# For every loaded build tag #}
+{% for i in range %}
+<!-- DataRow -->
+<span class="DataRow">
+  <!-- The data aligned with table headings -->
+  <span class="Data">
+    <span class="Column">{{ stampdates[stamps[i].revision] }}</span><!-- Hack
+  --><span class="Column"><a href="{{ path_to_root }}xttagsummary?tag={{stamps[i].revision}}{{build_numbers[i]}}">{{ stamps[i].revision }}</a></span><!-- Hack
+{% for b in builder_builds %}
+{% if b[i] %}
+  --><span class="Column">
+      <a href="{{ b[i].url }}">
+{% if b[i].ETA is none %}{# Basic box if no ETA #}
+<span class="RoundBox {{ b[i].class }}">{{ b[i].text|join('<br/>') }}</span>
+{% else %}{# Progress bar if there is ETA #}
+<span class="ProgressDone" style="width:{{b[i].Prog}}%;">&nbsp;</span><!-- Hack
+--><span class="ProgressRemain" style="width:{{100 - b[i].Prog}}%;">&nbsp;</span><!-- Hack
+--><span class="ProgressText">{{ b[i].ETA }}</span>
+{% endif %}
+      </a>
+    </span><!-- Hack
+{% else %}
+  --><span class="Column">&nbsp;</span><!-- Hack
+{% endif %}
+{% endfor %}
+  --><span class="Column">{{ stamphours[stamps[i].revision] }}</span>
+  </span><!-- End Data -->
+  </br>
+  <!-- The list of author changes (Width calculated at page render) -->
+  <span class="Changes" style="width:{{ 80 + 180 + ((builders|length)*120) + 85 }}px;">
+    <span class="Authors">
+{% if repolist[i] is none %}
+Could not open this tag's JSON file
+{% elif repolist[i]|length == 0 %}
+No discernable difference to prior tag
+{% else %}
+  {% for repo in repolist[i][:-1] %}
+        <a href="{{ path_to_root }}xttagsummary?tag={{stamps[i].revision}}&repo={{repo}}{{build_numbers[i]}}">{{repo}}</a>
+        (
+         {% for author in authors[i][loop.index-1][:-1] %}
+         <a href="{{ path_to_root }}xttagsummary?tag={{stamps[i].revision}}&author={{author}}{{build_numbers[i]}}">{{author}}</a>, 
+         {% endfor %}
+         <a href="{{ path_to_root }}xttagsummary?tag={{stamps[i].revision}}&author={{authors[i][loop.index-1][-1]}}{{build_numbers[i]}}">{{authors[i][loop.index-1][-1]}}</a>
+        ),
+  {% endfor %}
+        <a href="{{ path_to_root }}xttagsummary?tag={{stamps[i].revision}}&repo={{repolist[i][-1]}}{{build_numbers[i]}}">{{repolist[i][-1]}}</a>
+        (
+         {% for author in authors[i][-1][:-1] %}
+         <a href="{{ path_to_root }}xttagsummary?tag={{stamps[i].revision}}&author={{author}}{{build_numbers[i]}}">{{author}}</a>,
+         {% endfor %}
+         <a href="{{ path_to_root }}xttagsummary?tag={{stamps[i].revision}}&author={{authors[i][-1][-1]}}{{build_numbers[i]}}">{{authors[i][-1][-1]}}</a> 
+        )
+{% endif %}
+    </span>
+  </span><!-- End Changes -->
+</span><!-- End DataRow -->
+</br>
+{% endfor %}
+
+{# Show either the show more button or the commits list #}
+{% if length != 0 %}
+<a href="?length={{length + 30}}"><span class="ShowMore" style="min-width:{{ 80 + 180 + ((builders|length)*120) + 85 }}px;">Show more</span></a>
+{% else %}
+<span class="CommitList">
+{% set repo='' %}
+{% for commit in commit_list %}
+{% if repo != commit[0] %}
+{% set repo=commit[0] %}
+  <h3>{{commit[0]}}</h3>
+{% endif %}
+{{commit[1]}}
+<a href="http://git.xci-test.com/cgit.cgi/xenclient/{{commit[0]}}/commit/?id={{commit[3]}}">{{commit[3]}}</a>
+{{commit[2]}}
+</br>
+{% endfor %}
+</span>
+{% endif %}
+
+<!-- script must go after the declaration of the settings span or it won't make it appear -->
+<script>
+  function pageInitBits(){
+      document.getElementById("SettingsForm").style.display = "inline-block"; //Make settings appear
+      var cookies = document.cookie; //Recover user's custom background image
+      var c_start = cookies.indexOf("customBack=")
+      if(c_start != -1){
+          c_start = cookies.indexOf("=", c_start) + 1;
+          var c_end = cookies.indexOf(";", c_start);
+          if(c_end == -1) c_end = cookies.length;
+          c_value = cookies.substring(c_start, c_end);
+          document.body.style.backgroundImage="url('" + c_value + "')";          
+      }
+  }
+  //Allows the user to set a custom background
+  function setBackground(){
+      var img_url = document.getElementById("backgroundValue").value;
+      document.body.style.backgroundImage="url('" + img_url + "')";
+      var exdate=new Date();
+      exdate.setDate(exdate.getDate() + 365);
+      document.cookie = "customBack=" + img_url + "; expires=" + exdate.toUTCString();
+  }
+
+  function appendParam(url, param){
+    if(url.indexOf('?') > -1){
+      url += '&' + param;
+    }else{
+      url += '?' + param;
+    }
+
+    return url;
+  }
+
+  function removeParam(toRemove)
+  {
+    var url = window.location.href;
+
+    //Check URL contains param
+    if(url.indexOf(toRemove+'=') > -1){
+      leftRight = url.split("?");
+      url = leftRight[0];
+      params = leftRight[1].split("&");
+      for(var i=0; i < params.length; i++){
+        if(params[i].indexOf(toRemove+'=') < 0){
+          url = appendParam(url, params[i]);
+        }
+      }
+    }
+
+    window.location.href = url;
+  }
+
+  function setReload()
+  {
+    var url = window.location.href;
+    var value = document.getElementById('reloadValue').value
+
+    //Check input is a numerical value
+    if(isNaN(value) == false){
+      //Ensure it is an int
+      value = Math.floor(value);
+      //Check input is greater than 15 (Buildbot's minimum)
+      if(value >= 15){
+            //Check URL does not already contain a reload param
+          if(url.indexOf('reload=') > -1){
+          leftRight = url.split("?");
+          url = leftRight[0];
+          params = leftRight[1].split("&");
+          for(var i=0; i < params.length; i++){
+            if(params[i].indexOf('reload=') > -1){
+              url = appendParam(url, 'reload='+value);
+            }else{
+              url = appendParam(url, params[i]);
+            }
+          }
+        }else{
+          url = appendParam(url, 'reload='+value);
+        }//end url.indexOf('reload') >= -1
+        window.location.href = url;
+      }else if(value == 0){
+        removeParam('reload')
+      }
+    }
+  }
+
+  function setParam(toSet)
+  {
+    var url = window.location.href;
+    var value = document.getElementById(toSet+'Value').value
+    //If there is no value, remove param from URL
+    if(value.length == 0){
+      removeParam(toSet);
+      return;
+    }
+
+    //Check URL does not already contain param
+    if(url.indexOf(toSet+'=') > -1){
+      leftRight = url.split("?");
+      url = leftRight[0];
+      params = leftRight[1].split("&");
+     for(var i=0; i < params.length; i++){
+        if(params[i].indexOf(toSet+'=') > -1){
+          url = appendParam(url, toSet+'='+value);
+        }else{
+          url = appendParam(url, params[i]);
+        }
+      }
+    }else{
+      url = appendParam(url, toSet+'='+value);
+    }
+    window.location.href = url;
+  }
+  
+  //Konami Code/Ponies
+  secret = ['38', '38', '40', '40', '37', '39', '37', '39', '66', '65'];
+  position = 0;
+  document.onkeydown = function(evt) {
+      evt = evt || window.event;
+      var charCode = evt.keyCode || evt.which;
+      if (secret[position] == charCode){
+          position += 1;
+          if (position == 10){
+              position = 0;
+              alert("Konami Code Detected!");
+              document.body.style.backgroundImage="url('http://somewhere.com/wallpaper.png')";
+          }
+      }else{
+          position = 0;
+      }
+  };
+  
+  //Display settings form only if JS is enabled
+  window.onload = pageInitBits();
+</script>
+{% endblock %}               
