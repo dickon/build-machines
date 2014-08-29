@@ -24,7 +24,6 @@ from sys import stderr
 from time import time
 
 GIT_TAG_PREFIX = 'tag: '
-TAG_FORMAT = '%s%06d-%s'
 
 try:
     from subprocess import check_output, PIPE, CalledProcessError
@@ -76,6 +75,8 @@ def read_options():
     parser.add_option('-i', '--inspection-repository', metavar='REPO',
                       help='Look in REPO for tags and repositories.txt', 
                       default='build-config')
+    parser.add_option('--tag-format', default='%s%06d-%s', metavar='PATTERN',
+                      help='Tag format is pATTERN, interpolated with prefix, tag number and branch')
     parser.add_option('-d', '--dump-json', action='store',metavar='FILE',
                       help='dump JSON record of repositories to FILE')
     global options, args
@@ -207,13 +208,13 @@ def obtain_head(repod, branch, defbranch):
         print >> stderr, repod, 'has neither', branch, 'nor', defbranch
         exit(6)
 
-def get_latest_tag(branch):
+def get_latest_tag(branch, tag_format):
     """Find the latest tag on branch"""
     repod = options.repository_base+'/'+options.inspection_repository+'.git'
     highest = find_highest_tag_number(repod, branch)
-    return TAG_FORMAT % (tag_prefix, highest, branch)
+    return tag_format % (tag_prefix, highest, branch)
 
-def handle_branch(branch):
+def handle_branch(branch, tag_format):
     """Work on branch"""
     if options.verbose:
         print >> stderr, 'working on branch', branch
@@ -223,7 +224,7 @@ def handle_branch(branch):
     if options.dump_json:
         with open(options.dump_json, 'w') as fout:
             dump(record, fout, indent=4)
-    latest_tag = get_latest_tag(branch)
+    latest_tag = get_latest_tag(branch, tag_format)
     if latest_tag is None:
         print >> stderr, 'WARNING: no tag found on', branch, 'in', \
             options.inspection_repository
@@ -268,15 +269,15 @@ def handle_branch(branch):
         if options.tag and not options.force:
             print >> stderr, 'ERROR: no need to tag', branch
             print >> stderr, '  use -f to tag anyway'
-            exit(0)
+            exit(9)
     else:
         if not options.tag:
             print branch
 
     if options.tag:
         tagnum = allocate_tag_number()
-        tag = TAG_FORMAT % (tag_prefix, tagnum, branch)
-        print tag
+        tag = tag_format % (tag_prefix, tagnum, branch)
+        print tagnum
         for repod, revision in heads:
             set_tag(tag, repod, revision)
 
@@ -297,7 +298,7 @@ def main():
     global tag_prefix
     tag_prefix = args[0]
     for branch in branches:
-        handle_branch(branch)
+        handle_branch(branch, options.tag_format)
 
 if __name__ == '__main__':
     main()
