@@ -263,11 +263,12 @@ def handle_branch(branch):
             # once we have found one untagged repository there
             # is no need to scan the others
             break
-            
+
     if len(untagged) == 0:
         if options.tag and not options.force:
             print >> stderr, 'ERROR: no need to tag', branch
             print >> stderr, '  use -f to tag anyway'
+            exit(0)
     else:
         if not options.tag:
             print branch
