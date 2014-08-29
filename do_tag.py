@@ -129,7 +129,7 @@ def find_highest_tag_number(repod, branch=None):
         except ValueError:
             continue
         itags.append(num)
-    return sorted(itags)[-1] if tags else 0
+    return sorted(itags)[-1] if itags else 100000
 
 def allocate_tag_number():
     """Work out next tag number"""
