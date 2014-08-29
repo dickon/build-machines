@@ -283,12 +283,7 @@ def main():
     """make tag"""
     read_options()
     umask(0022)
-    if options.tag and options.server is None:
-        if geteuid() != 0:
-            print >>stderr, 'ERROR: run as root or use the -s option', \
-                'to ssh when tagging'
-            exit(8)
-        
+
     branches = list(options.branch)
     if options.branches_file:
         branches += parse_lines(file(options.branches_file, 'r').read())
