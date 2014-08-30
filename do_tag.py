@@ -18,12 +18,13 @@
 #
 
 from optparse import OptionParser
-from os import umask, geteuid
+from os import umask
 from json import loads, dump
 from sys import stderr
 from time import time
 
 GIT_TAG_PREFIX = 'tag: '
+GIT_BINARY = 'git'
 
 try:
     from subprocess import check_output, PIPE, CalledProcessError
@@ -79,8 +80,11 @@ def read_options():
                       help='Tag format is pATTERN, interpolated with prefix, tag number and branch')
     parser.add_option('-d', '--dump-json', action='store',metavar='FILE',
                       help='dump JSON record of repositories to FILE')
-    global options, args
+    parser.add_option('--git-binary', action='store', metavar='PATH',
+                      default=GIT_BINARY, help='Use git binary at PATH')
+    global options, args, GIT_BINARY
     options, args = parser.parse_args()
+    GIT_BINARY = options.git_binary
 
 def command(args, **kw):
     """Run command described by args on server"""
@@ -104,21 +108,21 @@ def get_repositories(branch):
         gdo = '--git-dir='+options.repository_base+'/'+options.inspection_repository+'.git'
         tfile = branch+':repositories.'+extn
         try:
-            return command(['git', gdo, 'show', tfile]), extn
+            return command([GIT_BINARY, gdo, 'show', tfile]), extn
         except CalledProcessError:
             if extn == extns[-1]:
                 raise
 
 def get_head(branch, repod):
     """Get head on branch"""
-    return command(['git', '--git-dir='+ repod, 'rev-parse', '-q', '--verify', branch]).strip()
+    return command([GIT_BINARY, '--git-dir='+ repod, 'rev-parse', '-q', '--verify', branch]).strip()
 
 def find_highest_tag_number(repod, branch=None):
     """Work out next tag number on repod across all branches or
     a specific branch"""
     postfix = ('-'+branch) if branch else ''
     filter = tag_prefix+'*'+postfix
-    tags = command(['git', '--git-dir='+repod, 'tag', '-l', filter]).split()
+    tags = command([GIT_BINARY, '--git-dir='+repod, 'tag', '-l', filter]).split()
     itags = [] # the integer part of tags
     for tag in tags:
         try:
@@ -139,7 +143,7 @@ def allocate_tag_number():
 def set_tag(tag, repod, revision):
     """apply tag to revision on repod"""
     try:
-        command(['git', '--git-dir='+repod, 'tag', '-m', tag, tag, revision])
+        command([GIT_BINARY, '--git-dir='+repod, 'tag', '-m', tag, tag, revision])
     except CalledProcessError:
         print >> stderr, 'ERROR: git tag failed'
         exit(3)
@@ -241,7 +245,7 @@ def handle_branch(branch, tag_format):
         branchdes, headrev = obtain_head(repod, branch, record['fallback'])
         heads.append((repod, headrev))
         try:
-            out = command(['git', '--git-dir='+repod, 'rev-parse', '-q',
+            out = command([GIT_BINARY, '--git-dir='+repod, 'rev-parse', '-q',
                            '--verify', latest_tag+'^{commit}'])
         except CalledProcessError:
             # this can happen if do_tag is killed so we don't fail
