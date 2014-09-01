@@ -25,6 +25,7 @@ from time import time
 
 GIT_TAG_PREFIX = 'tag: '
 GIT_BINARY = 'git'
+REPOSITORIES_LIST_NAME = 'repositories.txt'
 
 try:
     from subprocess import check_output, PIPE, CalledProcessError
@@ -53,6 +54,7 @@ except ImportError:
 
 def read_options():
     """Read command line options"""
+    global options, args, GIT_BINARY, REPOSITORIES_LIST_NAME
     parser = OptionParser()
 
     parser.add_option('-b', '--branch', metavar='BRANCH', action='append',
@@ -74,17 +76,21 @@ def read_options():
     parser.add_option('--time-commands', help='show subprocess runtimes',
                       action='store_true')
     parser.add_option('-i', '--inspection-repository', metavar='REPO',
-                      help='Look in REPO for tags and repositories.txt', 
+                      help='Look in REPO for tags and REPOSITORIES_LIST_NAME', 
                       default='build-config')
+    parser.add_option('-n', '--repositories-base', metavar='REPOSITORIES_LIST_NAME',
+                      help='Basename of repositories txt is at REPOSITORIES_LIST_NAME. If that '
+                      'then .json is substituted for .txt.',
+                      default=REPOSITORIES_LIST_NAME)
     parser.add_option('--tag-format', default='%s%06d-%s', metavar='PATTERN',
-                      help='Tag format is pATTERN, interpolated with prefix, tag number and branch')
+                      help='Tag format is PATTERN, interpolated with prefix, tag number and branch')
     parser.add_option('-d', '--dump-json', action='store',metavar='FILE',
                       help='dump JSON record of repositories to FILE')
     parser.add_option('--git-binary', action='store', metavar='PATH',
                       default=GIT_BINARY, help='Use git binary at PATH')
-    global options, args, GIT_BINARY
     options, args = parser.parse_args()
     GIT_BINARY = options.git_binary
+    REPOSITORIES_LIST_NAME = options.repositories_base
 
 def command(args, **kw):
     """Run command described by args on server"""
@@ -106,7 +112,7 @@ def get_repositories(branch):
     extns =['json', 'txt']
     for extn in extns:
         gdo = '--git-dir='+options.repository_base+'/'+options.inspection_repository+'.git'
-        tfile = branch+':repositories.'+extn
+        tfile = branch+':'+REPOSITORIES_LIST_NAME.replace('.txt', '.'+extn)
         try:
             return command([GIT_BINARY, gdo, 'show', tfile]), extn
         except CalledProcessError:
