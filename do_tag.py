@@ -20,7 +20,7 @@
 from optparse import OptionParser
 from os import umask
 from json import loads, dump
-from sys import stderr
+from sys import stderr, platform
 from time import time
 
 GIT_TAG_PREFIX = 'tag: '
@@ -148,7 +148,7 @@ def set_tag(tag, repod, revision):
         print >> stderr, 'ERROR: git tag failed'
         exit(3)
 
-    if not options.server:
+    if not options.server and platform != 'win32':
         tag_file = repod+'/refs/tags/'+tag
         check_output(['chown', '--reference='+repod, tag_file])
         # chown the object we just created
